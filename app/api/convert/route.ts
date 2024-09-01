@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import sharp from "sharp";
-import fs from "fs";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request: Request) {
   try {
@@ -19,17 +16,16 @@ export async function POST(request: Request) {
     // Konversi AVIF ke PNG menggunakan sharp
     const pngBuffer = await sharp(avifImage).png().toBuffer();
 
-    // Generate unique filename
-    const fileName = `${uuidv4()}.png`;
-    const outputPath = path.join(process.cwd(), "public", fileName);
-    fs.writeFileSync(outputPath, pngBuffer);
-
-    return NextResponse.json({
-      message: "Konversi berhasil",
-      outputPath: `/${fileName}`,
+    // Kirim file PNG langsung sebagai response
+    return new NextResponse(pngBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "Content-Disposition": 'attachment; filename="converted.png"',
+      },
     });
   } catch (error) {
-    console.log({ error });
+    console.error("Error:", error);
     return NextResponse.json(
       { error: "Terjadi kesalahan saat mengonversi gambar" },
       { status: 500 }

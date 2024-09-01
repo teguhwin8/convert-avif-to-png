@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 export default function ConvertAvifToPng() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [convertedImage, setConvertedImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [downloadLink, setDownloadLink] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setSelectedFile(event.target.files[0]);
-      setConvertedImage(null); // Reset converted image on new upload
+      setDownloadLink(null); // Reset download link on new upload
     }
   };
 
@@ -27,13 +26,14 @@ export default function ConvertAvifToPng() {
       body: formData,
     });
 
-    const result = await response.json();
     setLoading(false);
 
     if (response.ok) {
-      setConvertedImage(result.outputPath);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      setDownloadLink(url);
     } else {
-      console.error(result.error);
+      console.error("Conversion failed");
     }
   };
 
@@ -53,18 +53,11 @@ export default function ConvertAvifToPng() {
         {loading ? "Converting..." : "Convert AVIF to PNG"}
       </button>
       {loading && <p className="mt-4 text-blue-500">Processing...</p>}
-      {convertedImage && (
+      {downloadLink && (
         <div className="mt-4">
-          <h3 className="text-lg font-semibold">Hasil Konversi:</h3>
-          <Image
-            src={convertedImage}
-            alt="Converted PNG"
-            width={400}
-            height={400}
-          />
           <a
-            href={convertedImage}
-            download
+            href={downloadLink}
+            download="converted.png"
             className="mt-4 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
           >
             Download PNG
